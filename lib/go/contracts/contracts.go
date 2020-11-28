@@ -12,15 +12,16 @@ import (
 )
 
 const (
-	flowFeesFilename           = "../../../contracts/FlowFees.cdc"
-	flowServiceAccountFilename = "../../../contracts/FlowServiceAccount.cdc"
-	flowTokenFilename          = "../../../contracts/FlowToken.cdc"
-	flowIdentityTableFilename  = "../../../contracts/FlowIDTableStaking.cdc"
-	flowQCFilename             = "../../../contracts/epochs/FlowQuorumCertificate.cdc"
-	flowDKGFilename            = "../../../contracts/epochs/FlowDKG.cdc"
-	flowEpochFilename          = "../../../contracts/epochs/FlowEpoch.cdc"
-	flowLockedTokensFilename   = "../../../contracts/LockedTokens.cdc"
-	flowStakingProxyFilename   = "../../../contracts/StakingProxy.cdc"
+	flowFeesFilename              = "../../../contracts/FlowFees.cdc"
+	flowServiceAccountFilename    = "../../../contracts/FlowServiceAccount.cdc"
+	flowTokenFilename             = "../../../contracts/FlowToken.cdc"
+	flowIdentityTableFilename     = "../../../contracts/FlowIDTableStaking.cdc"
+	flowQCFilename                = "../../../contracts/epochs/FlowQuorumCertificate.cdc"
+	flowDKGFilename               = "../../../contracts/epochs/FlowDKG.cdc"
+	flowEpochFilename             = "../../../contracts/epochs/FlowEpoch.cdc"
+	flowLockedTokensFilename      = "../../../contracts/LockedTokens.cdc"
+	flowStakingProxyFilename      = "../../../contracts/StakingProxy.cdc"
+	flowWithdrawalTrackerFilename = "../../../contracts/WithdrawalTracker.cdc"
 
 	// Test contracts
 	TESTFlowIdentityTableFilename = "../../../contracts/testContracts/TestFlowIDTableStaking.cdc"
@@ -157,5 +158,12 @@ func FlowLockedTokens(
 	code = strings.ReplaceAll(code, placeholderIDTableAddress, withHexPrefix(idTableAddress))
 	code = strings.ReplaceAll(code, placeholderStakingProxyAddress, withHexPrefix(stakingProxyAddress))
 
+	return []byte(code)
+}
+
+// WithdrawalTracker returns the WithdrawalTracker contract.
+//
+func WithdrawalTracker() []byte {
+	code := assets.MustAssetString(flowWithdrawalTrackerFilename)
 	return []byte(code)
 }

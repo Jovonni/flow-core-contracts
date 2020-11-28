@@ -11,11 +11,12 @@ import (
 	"github.com/onflow/flow-go-sdk"
 	sdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
+	sdktemplates "github.com/onflow/flow-go-sdk/templates"
 	"github.com/onflow/flow-go-sdk/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	emulator "github.com/dapperlabs/flow-emulator"
+	emulator "github.com/onflow/flow-emulator"
 
 	"github.com/onflow/flow-core-contracts/lib/go/contracts"
 	"github.com/onflow/flow-core-contracts/lib/go/templates"
@@ -112,7 +113,13 @@ func TestLockedTokensStaker(t *testing.T) {
 
 	// Deploy the StakingProxy contract
 	stakingProxyCode := contracts.FlowStakingProxy()
-	stakingProxyAddress, err := b.CreateAccount(nil, stakingProxyCode)
+	stakingProxyAddress, err := b.CreateAccount(nil,
+		[]sdktemplates.Contract{
+			{
+				Name:   "StakingProxy",
+				Source: string(stakingProxyCode),
+			},
+		})
 	if !assert.NoError(t, err) {
 		t.Log(err.Error())
 	}
@@ -956,7 +963,13 @@ func TestLockedTokensDelegator(t *testing.T) {
 
 	// Deploy the StakingProxy contract
 	stakingProxyCode := contracts.FlowStakingProxy()
-	stakingProxyAddress, err := b.CreateAccount(nil, stakingProxyCode)
+	stakingProxyAddress, err := b.CreateAccount(nil,
+		[]sdktemplates.Contract{
+			{
+				Name:   "StakingProxy",
+				Source: string(stakingProxyCode),
+			},
+		})
 	if !assert.NoError(t, err) {
 		t.Log(err.Error())
 	}
@@ -1546,7 +1559,13 @@ func TestCustodyProviderAccountCreation(t *testing.T) {
 
 	// Deploy the StakingProxy contract
 	stakingProxyCode := contracts.FlowStakingProxy()
-	stakingProxyAddress, err := b.CreateAccount(nil, stakingProxyCode)
+	stakingProxyAddress, err := b.CreateAccount(nil,
+		[]sdktemplates.Contract{
+			{
+				Name:   "StakingProxy",
+				Source: string(stakingProxyCode),
+			},
+		})
 	if !assert.NoError(t, err) {
 		t.Log(err.Error())
 	}

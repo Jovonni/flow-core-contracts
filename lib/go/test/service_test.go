@@ -7,6 +7,7 @@ import (
 
 	"github.com/onflow/flow-core-contracts/lib/go/contracts"
 	"github.com/onflow/flow-core-contracts/lib/go/templates"
+	sdktemplates "github.com/onflow/flow-go-sdk/templates"
 )
 
 func TestContracts(t *testing.T) {
@@ -14,7 +15,13 @@ func TestContracts(t *testing.T) {
 
 	// deploy the ServiceAccount contract
 	serviceAccountCode := contracts.FlowServiceAccount(emulatorFTAddress, emulatorFlowTokenAddress, "0xe5a8b7f23e8b548f")
-	_, err := b.CreateAccount(nil, serviceAccountCode)
+	_, err := b.CreateAccount(nil,
+		[]sdktemplates.Contract{
+			{
+				Name:   "ServiceAccount",
+				Source: string(serviceAccountCode),
+			},
+		})
 	assert.NoError(t, err)
 	_, err = b.CommitBlock()
 	assert.NoError(t, err)

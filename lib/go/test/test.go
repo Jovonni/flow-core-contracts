@@ -11,7 +11,7 @@ import (
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
 
-	emulator "github.com/dapperlabs/flow-emulator"
+	emulator "github.com/onflow/flow-emulator"
 )
 
 // newEmulator returns a emulator object for testing.
