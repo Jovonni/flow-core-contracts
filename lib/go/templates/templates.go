@@ -15,6 +15,7 @@ const (
 	placeholderIDTableAddress       = "0xIDENTITYTABLEADDRESS"
 	placeholderLockedTokensAddress  = "0xLOCKEDTOKENADDRESS"
 	placeholderStakingProxyAddress  = "0xSTAKINGPROXYADDRESS"
+	placeholderMemoEmitterAddress   = "0xMEMOEMITTER"
 )
 
 type Environment struct {
@@ -24,6 +25,7 @@ type Environment struct {
 	IDTableAddress       string
 	LockedTokensAddress  string
 	StakingProxyAddress  string
+	MemoEmitterAddress   string
 }
 
 func withHexPrefix(address string) string {
@@ -68,6 +70,12 @@ func replaceAddresses(code string, env Environment) string {
 		code,
 		placeholderStakingProxyAddress,
 		withHexPrefix(env.StakingProxyAddress),
+	)
+
+	code = strings.ReplaceAll(
+		code,
+		placeholderMemoEmitterAddress,
+		withHexPrefix(env.MemoEmitterAddress),
 	)
 
 	return code

@@ -21,6 +21,7 @@ const (
 	flowEpochFilename          = "epochs/FlowEpoch.cdc"
 	flowLockedTokensFilename   = "LockedTokens.cdc"
 	flowStakingProxyFilename   = "StakingProxy.cdc"
+	flowMemoEmitterFilename    = "MemoEmitter.cdc"
 
 	// Test contracts
 	TESTFlowIdentityTableFilename = "testContracts/TestFlowIDTableStaking.cdc"
@@ -32,6 +33,7 @@ const (
 	placeholderQCAddr               = "0xQCADDRESS"
 	placeholderDKGAddr              = "0xDKGADDRESS"
 	placeholderFlowFeesAddress      = "0xFLOWFEESADDRESS"
+	placeholderMemoEmitterAddres    = "0xMEMOEMITTER"
 )
 
 func withHexPrefix(address string) string {
@@ -156,6 +158,13 @@ func FlowLockedTokens(
 	code = strings.ReplaceAll(code, placeholderFlowTokenAddress, withHexPrefix(flowTokenAddress))
 	code = strings.ReplaceAll(code, placeholderIDTableAddress, withHexPrefix(idTableAddress))
 	code = strings.ReplaceAll(code, placeholderStakingProxyAddress, withHexPrefix(stakingProxyAddress))
+
+	return []byte(code)
+}
+
+// FlowmemoEmitter returns the MemoEmitter contract.
+func FlowMemoEmitter() []byte {
+	code := assets.MustAssetString(flowMemoEmitterFilename)
 
 	return []byte(code)
 }
