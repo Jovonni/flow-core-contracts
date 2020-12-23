@@ -12,12 +12,12 @@ transaction(amount: UFix64) {
         self.holderRef = account.borrow<&LockedTokens.TokenHolder>(from: LockedTokens.TokenHolderStoragePath)
             ?? panic("Could not borrow reference to TokenHolder")
 
-        let withdrawalTracker = account.load<WithdrawalTracker.WithdrawalTotalTracker>(from: withdrawalLimitPath)
+        let withdrawalTracker <- account.load<W@ithdrawalTracker.WithdrawalTotalTracker>(from: withdrawalTotalTrackerPath)
             ?? panic("Could not load withdrawal tracker")
 
         // We have to this here because we need access to the AuthAccount to save the result if it doesn't assert.
         withdrawalTracker.updateRunningTotal(withdrawalAmount: amount)
-        account.save<WithdrawalTracker.WithdrawalTotalTracker>(tracker, to: withdrawalTotalTrackerPath)
+        account.save<@WithdrawalTracker.WithdrawalTotalTracker>(<-withdrawalTracker, to: withdrawalTotalTrackerPath)
     }
 
     execute {
