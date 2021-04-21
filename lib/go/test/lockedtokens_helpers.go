@@ -1,9 +1,9 @@
 package test
 
 import (
+	"crypto/rand"
 	"encoding/hex"
 	"fmt"
-	"crypto/rand"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -316,6 +316,7 @@ func registerStakingCollectionNodesAndDelegators(
 	env templates.Environment,
 	lockedBalance, unlockedBalance string,
 ) (flow.Address, flow.Address, crypto.Signer, string, string) {
+
 	// Create a locked account pair with tokens in both accounts
 	newUserAddress, newUserSharedAddress, newUserSigner := createLockedAccountPairWithBalances(
 		t, b,

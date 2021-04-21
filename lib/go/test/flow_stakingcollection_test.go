@@ -1076,7 +1076,7 @@ func TestStakingCollectionRewards(t *testing.T) {
 
 	// end staking auction and epoch, then pay rewards
 	tx := createTxWithTemplateAndAuthorizer(b, templates.GenerateEndEpochScript(env), flow.HexToAddress(env.IDTableAddress))
-	err := tx.AddArgument(cadence.NewArray([]cadence.Value{cadence.NewString(adminID), cadence.NewString(joshID)}))
+	err := tx.AddArgument(cadence.NewArray([]cadence.Value{cadence.NewString(joshID1), cadence.NewString(joshID2)}))
 	require.NoError(t, err)
 	signAndSubmit(
 		t, b, tx,
@@ -1230,7 +1230,7 @@ func TestStakingCollectionRewards(t *testing.T) {
 			true,
 		)
 
-		// withdraw rewarded tokens to the locked account node
+		// stake rewarded tokens to the locked account node
 		tx = createTxWithTemplateAndAuthorizer(b, templates.GenerateCollectionStakeRewardedTokens(env), joshAddress)
 		_ = tx.AddArgument(cadence.NewString(joshID1))
 		_ = tx.AddArgument(cadence.NewOptional(nil))
@@ -1243,7 +1243,7 @@ func TestStakingCollectionRewards(t *testing.T) {
 			false,
 		)
 
-		// withdraw rewarded tokens to the unlocked account node
+		// stake rewarded tokens to the unlocked account node
 		tx = createTxWithTemplateAndAuthorizer(b, templates.GenerateCollectionStakeRewardedTokens(env), joshAddress)
 		_ = tx.AddArgument(cadence.NewString(joshID2))
 		_ = tx.AddArgument(cadence.NewOptional(nil))
@@ -1256,7 +1256,7 @@ func TestStakingCollectionRewards(t *testing.T) {
 			false,
 		)
 
-		// withdraw rewarded tokens to the locked account delegator
+		// stake rewarded tokens to the locked account delegator
 		tx = createTxWithTemplateAndAuthorizer(b, templates.GenerateCollectionStakeRewardedTokens(env), joshAddress)
 		_ = tx.AddArgument(cadence.NewString(joshID1))
 		_ = tx.AddArgument(cadence.NewUInt32(1))
@@ -1269,7 +1269,7 @@ func TestStakingCollectionRewards(t *testing.T) {
 			false,
 		)
 
-		// withdraw rewarded tokens to the unlocked account delegator
+		// stake rewarded tokens to the unlocked account delegator
 		tx = createTxWithTemplateAndAuthorizer(b, templates.GenerateCollectionStakeRewardedTokens(env), joshAddress)
 		_ = tx.AddArgument(cadence.NewString(joshID2))
 		_ = tx.AddArgument(cadence.NewUInt32(1))
@@ -1343,6 +1343,7 @@ func TestStakingCollectionRewards(t *testing.T) {
 		// Should fail because stake doesn't exist
 		tx := createTxWithTemplateAndAuthorizer(b, templates.GenerateCollectionUnstakeAll(env), joshAddress)
 		_ = tx.AddArgument(cadence.NewString(accessID))
+		_ = tx.AddArgument(cadence.NewOptional(nil))
 
 		signAndSubmit(
 			t, b, tx,
@@ -1354,6 +1355,7 @@ func TestStakingCollectionRewards(t *testing.T) {
 		// unstake all tokens to the locked account node
 		tx = createTxWithTemplateAndAuthorizer(b, templates.GenerateCollectionUnstakeAll(env), joshAddress)
 		_ = tx.AddArgument(cadence.NewString(joshID1))
+		_ = tx.AddArgument(cadence.NewOptional(nil))
 
 		signAndSubmit(
 			t, b, tx,
@@ -1365,6 +1367,31 @@ func TestStakingCollectionRewards(t *testing.T) {
 		// unstake all tokens to the unlocked account node
 		tx = createTxWithTemplateAndAuthorizer(b, templates.GenerateCollectionUnstakeAll(env), joshAddress)
 		_ = tx.AddArgument(cadence.NewString(joshID2))
+		_ = tx.AddArgument(cadence.NewOptional(nil))
+
+		signAndSubmit(
+			t, b, tx,
+			[]flow.Address{b.ServiceKey().Address, joshAddress},
+			[]crypto.Signer{b.ServiceKey().Signer(), joshSigner},
+			false,
+		)
+
+		// unstakeAll to the locked account delegator
+		tx = createTxWithTemplateAndAuthorizer(b, templates.GenerateCollectionUnstakeAll(env), joshAddress)
+		_ = tx.AddArgument(cadence.NewString(joshID1))
+		_ = tx.AddArgument(cadence.NewUInt32(1))
+
+		signAndSubmit(
+			t, b, tx,
+			[]flow.Address{b.ServiceKey().Address, joshAddress},
+			[]crypto.Signer{b.ServiceKey().Signer(), joshSigner},
+			false,
+		)
+
+		// unstakeAll to the unlocked account delegator
+		tx = createTxWithTemplateAndAuthorizer(b, templates.GenerateCollectionUnstakeAll(env), joshAddress)
+		_ = tx.AddArgument(cadence.NewString(joshID2))
+		_ = tx.AddArgument(cadence.NewUInt32(1))
 
 		signAndSubmit(
 			t, b, tx,
@@ -1409,22 +1436,22 @@ func TestStakingCollectionRewards(t *testing.T) {
 		verifyStakingInfo(t, b, env, StakingInfo{
 			nodeID:                   joshID1,
 			delegatorID:              1,
-			tokensCommitted:          "5000.0",
+			tokensCommitted:          "0.0",
 			tokensStaked:             "50000.0",
-			tokensRequestedToUnstake: "0.0",
+			tokensRequestedToUnstake: "50000.0",
 			tokensUnstaking:          "0.0",
-			tokensUnstaked:           "0.0",
+			tokensUnstaked:           "5000.0",
 			tokensRewarded:           "31970.8025",
 		})
 
 		verifyStakingInfo(t, b, env, StakingInfo{
 			nodeID:                   joshID2,
 			delegatorID:              1,
-			tokensCommitted:          "5000.0",
+			tokensCommitted:          "0.0",
 			tokensStaked:             "500000.0",
-			tokensRequestedToUnstake: "0.0",
+			tokensRequestedToUnstake: "500000.0",
 			tokensUnstaking:          "0.0",
-			tokensUnstaked:           "0.0",
+			tokensUnstaked:           "5000.0",
 			tokensRewarded:           "409708.025",
 		})
 	})
@@ -1491,7 +1518,7 @@ func TestStakingCollectionCloseStake(t *testing.T) {
 
 		// End staking auction and epoch
 		endStakingMoveTokens(t, b, env, flow.HexToAddress(env.IDTableAddress), IDTableSigner,
-			[]cadence.Value{cadence.NewString(adminID), cadence.NewString(joshID)},
+			[]cadence.Value{cadence.NewString(joshID1), cadence.NewString(joshID2)},
 		)
 
 		// Should fail because node isn't ready to be closed. tokens in staked bucket
@@ -1554,6 +1581,7 @@ func TestStakingCollectionCloseStake(t *testing.T) {
 		// Request Unstaking all staked tokens from joshID1
 		tx = createTxWithTemplateAndAuthorizer(b, templates.GenerateCollectionUnstakeAll(env), joshAddress)
 		_ = tx.AddArgument(cadence.NewString(joshID1))
+		_ = tx.AddArgument(cadence.NewOptional(nil))
 
 		signAndSubmit(
 			t, b, tx,
@@ -1591,6 +1619,7 @@ func TestStakingCollectionCloseStake(t *testing.T) {
 		// Request Unstaking all staked tokens from joshID2
 		tx = createTxWithTemplateAndAuthorizer(b, templates.GenerateCollectionUnstakeAll(env), joshAddress)
 		_ = tx.AddArgument(cadence.NewString(joshID2))
+		_ = tx.AddArgument(cadence.NewOptional(nil))
 
 		signAndSubmit(
 			t, b, tx,
@@ -1601,7 +1630,7 @@ func TestStakingCollectionCloseStake(t *testing.T) {
 
 		// End staking auction and epoch
 		endStakingMoveTokens(t, b, env, flow.HexToAddress(env.IDTableAddress), IDTableSigner,
-			[]cadence.Value{cadence.NewString(adminID), cadence.NewString(joshID)},
+			[]cadence.Value{cadence.NewString(joshID1), cadence.NewString(joshID2)},
 		)
 
 		// Should fail because node isn't ready to be closed. tokens in unstaking bucket
@@ -1651,7 +1680,7 @@ func TestStakingCollectionCloseStake(t *testing.T) {
 		)
 
 		endStakingMoveTokens(t, b, env, flow.HexToAddress(env.IDTableAddress), IDTableSigner,
-			[]cadence.Value{cadence.NewString(adminID), cadence.NewString(joshID)},
+			[]cadence.Value{cadence.NewString(joshID1), cadence.NewString(joshID2)},
 		)
 
 		verifyStakingInfo(t, b, env, StakingInfo{
@@ -1758,7 +1787,6 @@ func TestStakingCollectionCloseStake(t *testing.T) {
 	})
 
 }
-
 
 func TestDoesAccountHaveStakingCollection(t *testing.T) {
 

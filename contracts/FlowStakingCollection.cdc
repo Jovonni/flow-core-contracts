@@ -3,7 +3,7 @@
     FlowStakingCollection
 
     This contract defines a collection for staking and delegating objects
-    which allows users to stake and delegate for as many nodes as they want in a single account.
+    which allows users to stake for as many nodes and/or delegators as they want in a single account.
     It is compatible with the locked token account setup.
 
  */
@@ -183,7 +183,7 @@ pub contract FlowStakingCollection {
             }
         }
 
-        /// Deposits tokens back to a vault after being withdrawn from a Stake or Delegation.
+        /// Deposits tokens back to a vault after being withdrawn from a Node or Delegator.
         /// Deposits to unlocked tokens first, if possible, followed by locked tokens
         access(self) fun depositTokens(from: @FungibleToken.Vault) {
             pre {
@@ -216,7 +216,7 @@ pub contract FlowStakingCollection {
             }
         }
 
-        /// Returns true if a Stake or Delegation record exists in the StakingCollection for a given nodeID and optional delegatorID, otherwise false.
+        /// Returns true if a Node or Delegator record exists in the StakingCollection for a given nodeID and optional delegatorID, otherwise false.
         pub fun doesStakeExist(nodeID: String, delegatorID: UInt32?): Bool {
             var tokenHolderNodeID: String? = nil
             var tokenHolderDelegatorNodeID: String? = nil
@@ -276,15 +276,15 @@ pub contract FlowStakingCollection {
                 let stakingInfo = FlowIDTableStaking.NodeInfo(nodeID: nodeID)
                 let totalStaked = stakingInfo.tokensStaked + stakingInfo.tokensCommitted + stakingInfo.tokensUnstaking + stakingInfo.tokensUnstaked
 
-                /// Since the NodeStaker object is being removed, the total number of unlocked tokens staked to it is deducted from the counter.
+                // Since the NodeStaker object is being removed, the total number of unlocked tokens staked to it is deducted from the counter.
                 self.unlockedTokensUsed = self.unlockedTokensUsed - totalStaked
 
-                /// Removes the NodeStaker object from the Staking Collections internal nodeStakers map.
+                // Removes the NodeStaker object from the Staking Collections internal nodeStakers map.
                 let nodeStaker <- self.nodeStakers[nodeID] <- nil
                 
                 return <- nodeStaker
             } else {
-                /// The function does not allow for removing a NodeStaker stored in the locked account, if one exists.
+                // The function does not allow for removing a NodeStaker stored in the locked account, if one exists.
                 panic("Cannot remove node stored in locked account.")
             }
 
@@ -305,10 +305,10 @@ pub contract FlowStakingCollection {
                     let stakingInfo = FlowIDTableStaking.DelegatorInfo(nodeID: nodeID, delegatorID: delegatorID)
                     let totalStaked = stakingInfo.tokensStaked + stakingInfo.tokensCommitted + stakingInfo.tokensUnstaking + stakingInfo.tokensUnstaked
 
-                    /// Since the NodeDelegator object is being removed, the total number of unlocked tokens delegated to it is deducted from the counter.
+                    // Since the NodeDelegator object is being removed, the total number of unlocked tokens delegated to it is deducted from the counter.
                     self.unlockedTokensUsed = self.unlockedTokensUsed - totalStaked
 
-                    /// Removes the NodeDelegator object from the Staking Collections internal nodeDelegators map.
+                    // Removes the NodeDelegator object from the Staking Collections internal nodeDelegators map.
                     let nodeDelegator <- self.nodeDelegators[nodeID] <- nil
 
                     return <- nodeDelegator
@@ -316,7 +316,7 @@ pub contract FlowStakingCollection {
                     panic("Expected delegatorID does not correspond to the delegator in the Staking Collection.")
                 }
             } else {
-                /// The function does not allow for removing a NodeDelegator stored in the locked account, if one exists.
+                // The function does not allow for removing a NodeDelegator stored in the locked account, if one exists.
                 panic("Cannot remove delegator stored in locked account.")
             }
 
@@ -381,7 +381,7 @@ pub contract FlowStakingCollection {
         // If they are staking for a delegator, they provide the node ID for the node they are delegating to
         // and their delegator ID to specify that it is for their delegator object
 
-        /// Function to stake new tokens for an existing Stake or Delegation record in the StakingCollection
+        /// Function to stake new tokens for an existing Node or Delegator record in the StakingCollection
         pub fun stakeNewTokens(nodeID: String, delegatorID: UInt32?, amount: UFix64) {
             pre {
                 self.doesStakeExist(nodeID: nodeID, delegatorID: delegatorID): "Specified stake does not exist"
@@ -415,14 +415,14 @@ pub contract FlowStakingCollection {
                         self.tokenHolder!.borrow()!.deposit(from: <- self.unlockedVault.borrow()!.withdraw(amount: amount - lockedBalance))
                     } 
 
-                    // Use the staker stored in the locked account
+                    // Use the Node stored in the locked account
                     let staker = self.tokenHolder!.borrow()!.borrowStaker()
                     staker.stakeNewTokens(amount: amount)
                 }
             }
         }
 
-        /// Function to stake unstaked tokens for an existing Stake or Delegation record in the StakingCollection
+        /// Function to stake unstaked tokens for an existing Node or Delegator record in the StakingCollection
         pub fun stakeUnstakedTokens(nodeID: String, delegatorID: UInt32?, amount: UFix64) {
             pre {
                 self.doesStakeExist(nodeID: nodeID, delegatorID: delegatorID): "Specified stake does not exist"
@@ -446,7 +446,7 @@ pub contract FlowStakingCollection {
             }
         }
 
-        /// Function to stake rewarded tokens for an existing Stake or Delegation record in the StakingCollection
+        /// Function to stake rewarded tokens for an existing Node or Delegator record in the StakingCollection
         pub fun stakeRewardedTokens(nodeID: String, delegatorID: UInt32?, amount: UFix64) {
             pre {
                 self.doesStakeExist(nodeID: nodeID, delegatorID: delegatorID): "Specified stake does not exist"
@@ -475,7 +475,7 @@ pub contract FlowStakingCollection {
             }
         }
 
-        /// Function to request tokens to be unstaked for an existing Stake or Delegation record in the StakingCollection
+        /// Function to request tokens to be unstaked for an existing Node or Delegator record in the StakingCollection
         pub fun requestUnstaking(nodeID: String, delegatorID: UInt32?, amount: UFix64) { 
             pre {
                 self.doesStakeExist(nodeID: nodeID, delegatorID: delegatorID): "Specified stake does not exist"
@@ -499,22 +499,33 @@ pub contract FlowStakingCollection {
             }
         }
 
-        /// Function to unstake all tokens for an existing node staking record in the StakingCollection
-        /// Only available for node operators
-        pub fun unstakeAll(nodeID: String) {
+        /// Function to unstake all tokens for an existing node or delegator in the StakingCollection
+        pub fun unstakeAll(nodeID: String, delegatorID: UInt32?) {
             pre {
                 self.doesStakeExist(nodeID: nodeID, delegatorID: nil): "Specified stake does not exist"
             }
-    
-            if let node = self.borrowNode(nodeID) {
-                node.unstakeAll()
+
+            if let _delegatorID = delegatorID {
+                let delegatorInfo = FlowIDTableStaking.DelegatorInfo(nodeID: nodeID, delegatorID: _delegatorID)
+                let tokensStaked = delegatorInfo.tokensCommitted + delegatorInfo.tokensStaked - delegatorInfo.tokensRequestedToUnstake
+
+                if let delegator = self.borrowDelegator(nodeID, _delegatorID) {
+                    delegator.requestUnstaking(amount: tokensStaked)
+                } else {
+                    let delegator = self.tokenHolder!.borrow()!.borrowDelegator()
+                    delegator.requestUnstaking(amount: tokensStaked)
+                }
             } else {
-                let staker = self.tokenHolder!.borrow()!.borrowStaker()
-                staker.unstakeAll()
+                if let node = self.borrowNode(nodeID) {
+                    node.unstakeAll()
+                } else {
+                    let staker = self.tokenHolder!.borrow()!.borrowStaker()
+                    staker.unstakeAll()
+                }
             }
         }
 
-        /// Function to withdraw unstaked tokens for an existing Stake or Delegation record in the StakingCollection
+        /// Function to withdraw unstaked tokens for an existing Node or Delegator record in the StakingCollection
         pub fun withdrawUnstakedTokens(nodeID: String, delegatorID: UInt32?, amount: UFix64) { 
             pre {
                 self.doesStakeExist(nodeID: nodeID, delegatorID: delegatorID): "Specified stake does not exist"
@@ -539,7 +550,7 @@ pub contract FlowStakingCollection {
             }
         }
 
-        /// Function to withdraw rewarded tokens for an existing Stake or Delegation record in the StakingCollection
+        /// Function to withdraw rewarded tokens for an existing Node or Delegator record in the StakingCollection
         pub fun withdrawRewardedTokens(nodeID: String, delegatorID: UInt32?, amount: UFix64) {
             pre {
                 self.doesStakeExist(nodeID: nodeID, delegatorID: delegatorID): "Specified stake does not exist"
@@ -584,7 +595,7 @@ pub contract FlowStakingCollection {
 
         // Closers
 
-        /// Closes an existing stake or delegation, moving all withdrawable tokens back to the users account and removing the stake
+        /// Closes an existing Node or delegator, moving all withdrawable tokens back to the users account and removing the node
         /// or delegator object from the StakingCollection.
         pub fun closeStake(nodeID: String, delegatorID: UInt32?) {
             pre {
